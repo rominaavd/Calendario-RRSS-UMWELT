@@ -388,9 +388,7 @@ function delPost(id){
   STATE.posts = STATE.posts.filter(x=>x.id!==id);
   persist();
 }
-
-// ⚠️ PEGA AQUÍ la URL de tu Web App de Google Apps Script (termina en /exec)
-const APPS_SCRIPT_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBoIuowHFzXDjmc27DEzHb-SS-wo4OTrkdrP3zwvYTv0SzjTu_ePb_s5iYuvugQdB8cg/exec';
 
 function sheetReady(){ return APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('PASTE_YOUR'); }
 

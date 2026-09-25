@@ -388,7 +388,7 @@ function delPost(id){
   STATE.posts = STATE.posts.filter(x=>x.id!==id);
   persist();
 }
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwCh_ZaXvYtvrttaRVSEvi61X4_QLMa0NBTZkI488U3ElRN2yK8A8a7Q8VlYhA7ysGOtA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnudADSioIjNzOri08_N187Iyj0-kpegknIIbeH8wSXst--8QB1WqZv8xa4WqkEKYy7A/exec';
 
 function sheetReady(){ return APPS_SCRIPT_URL && !APPS_SCRIPT_URL.includes('PASTE_YOUR'); }
 

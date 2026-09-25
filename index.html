@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -65,196 +65,246 @@ body{height:100%; margin:0; background:var(--bg); color:var(--ink); font-family:
 .add-panel .row2{display:flex; gap:5px;}
 .add-panel select{flex:1; font-size:11px; border-radius:7px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:4px;}
 .add-panel button{border:none; background:var(--orange); color:#fff; border-radius:7px; padding:4px 12px; cursor:pointer; font-size:13px; font-weight:600;}
-.loading-layer {display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.7); z-index:999; justify-content:center; align-items:center; font-weight:bold;}
+.legend{display:flex; gap:16px; margin-top:18px; font-size:12px; color:var(--muted); flex-wrap:wrap; align-items:center;}
+.legend span{display:flex; align-items:center; gap:5px;}
+.month-select{margin-bottom:16px;}
+.month-select select{font-size:14px; padding:7px 12px; border-radius:9px; border:1px solid var(--line); background:var(--card); color:var(--ink); font-weight:500;}
+.msum{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 18px; text-align:center; min-width:96px;}
+.card .n{font-size:22px; font-weight:700;}
+.card .l{font-size:11px; color:var(--muted); margin-top:2px;}
+.card.c-listo .n{color:var(--listo);}
+.card.c-prog .n{color:var(--prog);}
+.card.c-pend .n{color:var(--pend);}
+table{width:100%; border-collapse:collapse; font-size:13px; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+th,td{padding:9px 10px; border-bottom:1px solid var(--line); text-align:left;}
+th{color:var(--muted); font-size:10.5px; text-transform:uppercase; letter-spacing:.3px; background:var(--bg);}
+tr:last-child td{border-bottom:none;}
+.pill{display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:12px; font-size:11.5px; font-weight:600;}
+.pill.pendiente{background:var(--orange-soft); color:var(--pend);}
+.pill.en_progreso{background:#e8f1f8; color:var(--prog);}
+.pill.listo{background:var(--green-soft); color:var(--listo);}
+.hint{font-size:11.5px; color:var(--muted); margin-top:14px;}
+.mand-badge{position:absolute; top:5px; right:6px; font-size:8.5px; font-weight:700; color:var(--orange); background:var(--orange-soft); padding:1px 6px; border-radius:7px; letter-spacing:.2px;}
+.planner-head{display:grid; grid-template-columns:repeat(7,1fr); gap:7px; margin-bottom:6px; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; text-align:center;}
+.planner-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:7px;}
+.planner-cell{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:7px; min-height:104px;}
+.planner-cell.dim{opacity:.4;}
+.planner-cell.is-today{border-color:var(--orange); box-shadow:0 0 0 1px var(--orange) inset;}
+.pnum{font-size:12px; font-weight:700; margin-bottom:5px;}
+.planner-chip{font-size:10px; font-weight:600; padding:2px 6px; border-radius:7px; margin-bottom:3px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+/* Utilidades para ocultar vistas */
+.view-section { display: none; }
+.view-section.active { display: block; }
 </style>
 </head>
 <body>
 
-<div class="loading-layer" id="loader">Sincronizando con Google Sheets...</div>
-
 <div class="header">
   <span class="logo-badge">
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Logo" />
+    <!-- SVG genérico reemplazando el base64 incompleto -->
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
   </span>
   <h1>Calendario de Contenido IG</h1>
 </div>
 <div class="sub">
-  <span class="dotlive"></span> Conectado a Sheets
+  <span class="dotlive"></span> Estado: Sincronizado
 </div>
 
 <div class="tabs-row">
   <div class="tabs">
-    <button class="tab active">Semana Actual</button>
+    <div class="tab active" onclick="switchTab('week', this)">Semanal</div>
+    <div class="tab" onclick="switchTab('month', this)">Mensual</div>
+    <div class="tab" onclick="switchTab('list', this)">Lista</div>
   </div>
-  <button class="export-btn" onclick="fetchData()">↻ Refrescar</button>
+  <button class="export-btn">⬇ Exportar CSV</button>
 </div>
 
-<div class="grid" id="calendar-grid">
-  <!-- Las columnas se generarán dinámicamente -->
+<!-- VISTA SEMANAL -->
+<div id="view-week" class="view-section active">
+  <div class="weeknav">
+    <button>&lt;</button>
+    <span class="lbl">Sep 21 - Sep 27</span>
+    <button>&gt;</button>
+    <span class="today-badge">Esta semana</span>
+  </div>
+
+  <div class="grid">
+    <!-- Lunes -->
+    <div class="col">
+      <h3>Lunes <span class="daynum">21</span></h3>
+      
+      <div class="post st-listo">
+        <div class="del">✕</div>
+        <div class="type">Reel</div>
+        <div class="title">Tips de organización</div>
+        <span class="statuschip">Listo</span>
+      </div>
+
+      <details class="addbox">
+        <summary>Añadir</summary>
+        <div class="add-panel">
+          <input type="text" placeholder="Título...">
+          <div class="row2">
+            <select>
+              <option>Reel</option>
+              <option>Carrusel</option>
+              <option>Historia</option>
+            </select>
+            <button>Add</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Martes -->
+    <div class="col is-today">
+      <h3>Martes <span class="daynum">22</span></h3>
+      <div class="post st-en_progreso">
+        <div class="del">✕</div>
+        <div class="type">Carrusel</div>
+        <div class="title">Mitos vs Realidades</div>
+        <span class="statuschip">En progreso</span>
+      </div>
+      <details class="addbox">
+        <summary>Añadir</summary>
+        <div class="add-panel">
+          <input type="text" placeholder="Título...">
+          <div class="row2">
+            <select><option>Reel</option><option>Historia</option></select>
+            <button>Add</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Miércoles a Domingo (Vacíos de ejemplo) -->
+    <div class="col">
+      <h3>Miércoles <span class="daynum">23</span></h3>
+      <div class="post st-pendiente">
+        <div class="del">✕</div>
+        <div class="type">Historia</div>
+        <div class="title">Detrás de escena</div>
+        <span class="statuschip">Pendiente</span>
+      </div>
+      <details class="addbox"><summary>Añadir</summary></details>
+    </div>
+    
+    <div class="col"><h3>Jueves <span class="daynum">24</span></h3><details class="addbox"><summary>Añadir</summary></details></div>
+    <div class="col"><h3>Viernes <span class="daynum">25</span></h3><details class="addbox"><summary>Añadir</summary></details></div>
+    <div class="col"><h3>Sábado <span class="daynum">26</span></h3><details class="addbox"><summary>Añadir</summary></details></div>
+    <div class="col"><h3>Domingo <span class="daynum">27</span></h3><details class="addbox"><summary>Añadir</summary></details></div>
+  </div>
+</div>
+
+<!-- VISTA MENSUAL -->
+<div id="view-month" class="view-section">
+  <div class="month-select">
+    <select>
+      <option>Septiembre 2026</option>
+      <option>Octubre 2026</option>
+    </select>
+  </div>
+  
+  <div class="msum">
+    <div class="card c-listo"><div class="n">12</div><div class="l">Publicados / Listos</div></div>
+    <div class="card c-prog"><div class="n">5</div><div class="l">En progreso</div></div>
+    <div class="card c-pend"><div class="n">8</div><div class="l">Pendientes</div></div>
+  </div>
+
+  <div class="planner-head">
+    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+  </div>
+  
+  <div class="planner-grid">
+    <div class="planner-cell dim"><div class="pnum">31</div></div>
+    <div class="planner-cell"><div class="pnum">1</div></div>
+    <div class="planner-cell"><div class="pnum">2</div></div>
+    <div class="planner-cell"><div class="pnum">3</div></div>
+    <div class="planner-cell"><div class="pnum">4</div></div>
+    <div class="planner-cell"><div class="pnum">5</div></div>
+    <div class="planner-cell"><div class="pnum">6</div></div>
+    <!-- Semana 2 -->
+    <div class="planner-cell"><div class="pnum">7</div></div>
+    <div class="planner-cell"><div class="pnum">8</div></div>
+    <div class="planner-cell"><div class="pnum">9</div></div>
+    <div class="planner-cell"><div class="pnum">10</div></div>
+    <div class="planner-cell"><div class="pnum">11</div></div>
+    <div class="planner-cell"><div class="pnum">12</div></div>
+    <div class="planner-cell"><div class="pnum">13</div></div>
+    <!-- Semana 3 -->
+    <div class="planner-cell"><div class="pnum">14</div></div>
+    <div class="planner-cell"><div class="pnum">15</div></div>
+    <div class="planner-cell"><div class="pnum">16</div></div>
+    <div class="planner-cell"><div class="pnum">17</div></div>
+    <div class="planner-cell"><div class="pnum">18</div></div>
+    <div class="planner-cell"><div class="pnum">19</div></div>
+    <div class="planner-cell"><div class="pnum">20</div></div>
+    <!-- Semana 4 -->
+    <div class="planner-cell"><div class="pnum">21</div><div class="planner-chip" style="background:var(--green-soft); color:var(--listo)">Reel: Tips</div></div>
+    <div class="planner-cell is-today"><div class="pnum">22</div><div class="planner-chip" style="background:#e8f1f8; color:var(--prog)">Carrusel: Mitos</div></div>
+    <div class="planner-cell"><div class="pnum">23</div><div class="planner-chip" style="background:var(--orange-soft); color:var(--pend)">Historia: Q&A</div></div>
+    <div class="planner-cell"><div class="pnum">24</div></div>
+    <div class="planner-cell"><div class="pnum">25</div></div>
+    <div class="planner-cell"><div class="pnum">26</div></div>
+    <div class="planner-cell"><div class="pnum">27</div></div>
+  </div>
+</div>
+
+<!-- VISTA LISTA -->
+<div id="view-list" class="view-section">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Título</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Lun, 21 Sep</td>
+        <td>Reel</td>
+        <td>Tips de organización</td>
+        <td><span class="pill listo">Listo</span></td>
+      </tr>
+      <tr>
+        <td>Mar, 22 Sep</td>
+        <td>Carrusel</td>
+        <td>Mitos vs Realidades</td>
+        <td><span class="pill en_progreso">En progreso</span></td>
+      </tr>
+      <tr>
+        <td>Mié, 23 Sep</td>
+        <td>Historia</td>
+        <td>Detrás de escena</td>
+        <td><span class="pill pendiente">Pendiente</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="hint">* Aquí se muestran todos los posts planeados en orden cronológico.</div>
 </div>
 
 <script>
-  // Script URL proporcionada
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxp9N6AaPok_ayZD4UUSQqVGWM2zW8GKg57M23pjOE08zXPJtDsl-ym3sAvtci7NAeprQ/exec';
-  
-  const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-  let localData = [];
-
-  // 1. Inicializar la cuadrícula vacía
-  function initGrid() {
-    const grid = document.getElementById('calendar-grid');
-    grid.innerHTML = '';
+  function switchTab(viewId, element) {
+    // Quitar la clase active de todas las pestañas
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    // Añadir active a la pestaña clicada
+    element.classList.add('active');
     
-    diasSemana.forEach(dia => {
-      const colHTML = `
-        <div class="col" id="col-${dia}">
-          <h3>${dia} <span class="daynum"></span></h3>
-          <div class="posts-container" id="posts-${dia}"></div>
-          
-          <details class="addbox">
-            <summary>Añadir</summary>
-            <form class="add-panel" onsubmit="addPost(event, '${dia}')">
-              <input type="text" name="title" placeholder="Título/Tema" required>
-              <div class="row2">
-                <select name="type">
-                  <option value="Reel">Reel</option>
-                  <option value="Carrusel">Carrusel</option>
-                  <option value="Historia">Historia</option>
-                </select>
-                <select name="status">
-                  <option value="st-pendiente">Pendiente</option>
-                  <option value="st-en_progreso">En Progreso</option>
-                  <option value="st-listo">Listo</option>
-                </select>
-              </div>
-              <button type="submit">Guardar</button>
-            </form>
-          </details>
-        </div>
-      `;
-      grid.insertAdjacentHTML('beforeend', colHTML);
-    });
+    // Ocultar todas las vistas
+    document.querySelectorAll('.view-section').forEach(section => section.classList.remove('active'));
+    // Mostrar la vista objetivo
+    document.getElementById('view-' + viewId).classList.add('active');
   }
-
-  // 2. Renderizar datos en la vista
-  function renderPosts() {
-    // Limpiar posts existentes
-    diasSemana.forEach(dia => {
-      document.getElementById(`posts-${dia}`).innerHTML = '';
-    });
-
-    localData.forEach((item, index) => {
-      if(!item.dia || !document.getElementById(`posts-${item.dia}`)) return;
-
-      let statusText = item.status === 'st-listo' ? 'Listo' : item.status === 'st-en_progreso' ? 'En Progreso' : 'Pendiente';
-      
-      const postHTML = `
-        <div class="post ${item.status}">
-          <div class="del" onclick="deletePost('${item.id || index}')">✖</div>
-          <div class="type">${item.type}</div>
-          <div class="title">${item.title}</div>
-          <div class="statuschip">${statusText}</div>
-        </div>
-      `;
-      document.getElementById(`posts-${item.dia}`).insertAdjacentHTML('beforeend', postHTML);
-    });
-  }
-
-  // 3. Traer datos desde Google Sheets
-  async function fetchData() {
-    showLoader(true);
-    try {
-      const response = await fetch(SHEET_URL);
-      const result = await response.json();
-      // Asumiendo que el JSON devuelto es un Array de objetos: [{ dia, title, type, status, id }]
-      localData = result.data || result || []; 
-      renderPosts();
-    } catch (error) {
-      console.error("Error al cargar los datos:", error);
-      alert("Hubo un error al conectar con Google Sheets.");
-    } finally {
-      showLoader(false);
-    }
-  }
-
-  // 4. Guardar un nuevo post
-  async function addPost(e, dia) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    
-    // Preparar objeto para actualización optimista
-    const newPost = {
-      dia: dia,
-      title: formData.get('title'),
-      type: formData.get('type'),
-      status: formData.get('status'),
-      action: 'add'
-    };
-
-    // Actualización local inmediata
-    localData.push(newPost);
-    renderPosts();
-    form.reset();
-    form.closest('details').removeAttribute('open');
-
-    // Enviar a Google Sheets
-    try {
-      showLoader(true);
-      // Ajustar el FormData para AppScript
-      formData.append('dia', newPost.dia);
-      formData.append('action', 'add');
-      
-      await fetch(SHEET_URL, {
-        method: 'POST',
-        body: formData
-      });
-      // Sincronizar datos de vuelta para obtener los IDs reales
-      await fetchData();
-    } catch (error) {
-      console.error("Error al guardar:", error);
-      alert("Error guardando el contenido en Sheets.");
-    } finally {
-      showLoader(false);
-    }
-  }
-
-  // 5. Eliminar post
-  async function deletePost(id) {
-    if(!confirm("¿Eliminar esta publicación?")) return;
-    
-    showLoader(true);
-    try {
-      // Remover localmente para respuesta rápida
-      localData = localData.filter((p, i) => p.id !== id && i.toString() !== id.toString());
-      renderPosts();
-
-      const formData = new FormData();
-      formData.append('action', 'delete');
-      formData.append('id', id);
-
-      await fetch(SHEET_URL, {
-        method: 'POST',
-        body: formData
-      });
-      await fetchData();
-    } catch (error) {
-      console.error("Error al eliminar:", error);
-    } finally {
-      showLoader(false);
-    }
-  }
-
-  function showLoader(show) {
-    document.getElementById('loader').style.display = show ? 'flex' : 'none';
-  }
-
-  // Boot
-  document.addEventListener('DOMContentLoaded', () => {
-    initGrid();
-    fetchData(); // Carga inicial desde sheets
-  });
-
 </script>
+
 </body>
 </html>
